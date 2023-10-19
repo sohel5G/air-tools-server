@@ -54,6 +54,14 @@ async function run() {
             const result = await brands.toArray()
             res.send(result)
         })
+        app.get('/brands/:brandName', async (req, res) => {
+            const brandName = req.params.brandName;
+            const query = { brand: brandName };
+            const brands = productsCollection.find(query);
+            const result = await brands.toArray();
+            res.send(result);
+        })
+
 
 
         // Send a ping to confirm a successful connection
