@@ -31,7 +31,9 @@ const client = new MongoClient(uri, {
 
 const productsCollection = client.db("aircraftengineersstoreDB").collection("products");
 const brandsCollection = client.db("aircraftengineersstoreDB").collection("brands");
-const cartItemCollection = client.db("aircraftengineersstoreDB").collection("carditems");
+
+
+
 
 async function run() {
     try {
@@ -103,27 +105,42 @@ async function run() {
         })
 
 
-        // Add To cart products store in database API
-        app.post('/carditems', async (req, res) => {
+        // Add To cart products store in the database API
+        app.post('/carditems/:userId', async (req, res) => {
+
+            const newUserId = req.params.userId;
+            const cartItemCollection = client.db("aircraftengineersstoreAddToCartDB").collection(`${newUserId}`);
+
             const product = req.body;
+
             const result = await cartItemCollection.insertOne(product);
             res.send(result);
         })
 
-        // Cart page API Show all Cart item
-        app.get('/carditems', async (req, res) => {
-            const carts = cartItemCollection.find()
-            const result = await carts.toArray()
-            res.send(result)
+        // Cart page API Show all Cart item for this user
+        app.get('/carditems/:userId', async (req, res) => {
+            const newUserId = req.params.userId;
+            const cartItemCollection = client.db("aircraftengineersstoreAddToCartDB").collection(`${newUserId}`);
+
+            const cardItems = cartItemCollection.find();
+            const result = await cardItems.toArray();
+            res.send(result);
         })
 
         // Find Cart item to delete from cart page
-        app.delete('/carditems/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: new ObjectId(id) };
+        app.delete('/carditems/:userId', async (req, res) => {
+            const newUserId = req.params.userId;
+            const productId = req.query.productid;
+
+            const cartItemCollection = client.db("aircraftengineersstoreAddToCartDB").collection(`${newUserId}`);
+
+            const query = { _id: new ObjectId(productId) };
             const result = await cartItemCollection.deleteOne(query);
             res.send(result);
         })
+
+
+      
 
 
         // Send a ping to confirm a successful connection
