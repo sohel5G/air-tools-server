@@ -1,5 +1,8 @@
-require('dotenv').config()
-const express = require('express')
+require('dotenv').config();
+const express = require('express');
+jwt = require('jsonwebtoken');
+var cookieParser = require('cookie-parser')
+
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 
@@ -7,8 +10,12 @@ const app = express()
 const cors = require('cors')
 
 //middleware
-app.use(cors());
+app.use(cors({
+    origin: ['http://localhost:5173'],
+    credentials: true
+}));
 app.use(express.json());
+app.use(cookieParser())
 
 app.get('/', (req, res) => {
     res.send('Aircraft Engineers Store Server is running')
@@ -17,6 +24,39 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
     console.log(`Aircraft Engineers Store Server is running on PORT: ${port}`)
 })
+
+
+
+
+
+
+// My Custom made middleware
+const logger = (req, res, next) => {
+    console.log('Log Info : ', req.method, req.url);
+    next()
+}
+
+const verifyToken = (req, res, next) => {
+    const token = req?.cookies?.token;
+    // console.log('this cookie in the middleware ware', token);
+
+    if (!token) {
+        return res.status(401).send({ message: 'unauthorized access' });
+    }
+
+    jwt.verify(token, process.env.SECRET_TOKEN, (err, decoded) => {
+        if (err) {
+            return res.status(401).send({ message: 'unauthorized access' });
+        }
+        req.user = decoded;
+        next()
+    })
+}
+// My Custom made middleware end
+
+
+
+
 
 
 const uri = `mongodb+srv://${process.env.USER_NAME}:${process.env.PASS_WORD}@cluster0.qbl5b3c.mongodb.net/?retryWrites=true&w=majority`;
@@ -32,13 +72,59 @@ const client = new MongoClient(uri, {
 const productsCollection = client.db("aircraftengineersstoreDB").collection("products");
 const brandsCollection = client.db("aircraftengineersstoreDB").collection("brands");
 
-
-
-
 async function run() {
     try {
-        // Connect the client to the server	(optional starting in v4.7)
         // await client.connect();
+
+
+
+
+
+
+
+
+
+        // Auth API, Create token and set it to browser cookie
+        app.post('/jwt', async (req, res) => {
+
+            const user = req.body;
+            const token = jwt.sign(user, process.env.SECRET_TOKEN, { expiresIn: '1h' })
+
+            res.cookie('token', token, {
+                httpOnly: true,
+                secure: true,
+                sameSite: 'none'
+            })
+                .send({ success: true })
+        })
+        // Auth API, Create token and set it to browser cookie end
+
+
+        // Remove cookie if user logout
+        app.post('/logout', async (req, res) => {
+            const user = req.body;
+
+            res.clearCookie('token', { maxAge: 0 }).send({ success: true })
+        })
+        // Remove cookie if user logout end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         // Add products API
         app.post('/products', async (req, res) => {
@@ -117,8 +203,12 @@ async function run() {
             res.send(result);
         })
 
+
+        /* THIS JWT VERIFY API */
+
+
         // Cart page API Show all Cart item for this user
-        app.get('/carditems/:userId', async (req, res) => {
+        app.get('/carditems/:userId', verifyToken, async (req, res) => {
             const newUserId = req.params.userId;
             const cartItemCollection = client.db("aircraftengineersstoreAddToCartDB").collection(`${newUserId}`);
 
@@ -126,6 +216,11 @@ async function run() {
             const result = await cardItems.toArray();
             res.send(result);
         })
+
+        /* THIS JWT VERIFY API */
+
+
+
 
         // Find Cart item to delete from cart page
         app.delete('/carditems/:userId', async (req, res) => {
@@ -140,7 +235,7 @@ async function run() {
         })
 
 
-      
+
 
 
         // Send a ping to confirm a successful connection
