@@ -143,6 +143,27 @@ const verifyToken = (req, res, next) => {
 
 
 
+
+/* THIS JWT VERIFY API */
+// Cart page API Show all Cart item for this user only
+app.get('/carditems/:userEmail', verifyToken, async (req, res) => {
+    const newUserEmail = req.params.userEmail;
+    const cartItemCollection = client.db("aircraftengineersstoreAddToCartDB").collection(`${newUserEmail}`);
+
+    console.log('This is user', newUserEmail)
+    console.log('Token owner info', req.user)
+
+    if (req.user.email !== newUserEmail){
+        return res.status(403).send({message: 'forbidden access'});
+    }
+    const cardItems = cartItemCollection.find();
+    const result = await cardItems.toArray();
+    res.send(result);
+})
+/* THIS JWT VERIFY API */
+
+
+
 // make API secure and verify the token end
 ```
 

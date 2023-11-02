@@ -192,10 +192,10 @@ async function run() {
 
 
         // Add To cart products store in the database API
-        app.post('/carditems/:userId', async (req, res) => {
+        app.post('/carditems/:userEmail', async (req, res) => {
 
-            const newUserId = req.params.userId;
-            const cartItemCollection = client.db("aircraftengineersstoreAddToCartDB").collection(`${newUserId}`);
+            const newUserEmail = req.params.userEmail;
+            const cartItemCollection = client.db("aircraftengineersstoreAddToCartDB").collection(`${newUserEmail}`);
 
             const product = req.body;
 
@@ -206,12 +206,17 @@ async function run() {
 
         /* THIS JWT VERIFY API */
 
-
         // Cart page API Show all Cart item for this user
-        app.get('/carditems/:userId', verifyToken, async (req, res) => {
-            const newUserId = req.params.userId;
-            const cartItemCollection = client.db("aircraftengineersstoreAddToCartDB").collection(`${newUserId}`);
+        app.get('/carditems/:userEmail', verifyToken, async (req, res) => {
+            const newUserEmail = req.params.userEmail;
+            const cartItemCollection = client.db("aircraftengineersstoreAddToCartDB").collection(`${newUserEmail}`);
 
+            console.log('This is user', newUserEmail)
+            console.log('Token owner info', req.user)
+
+            if (req.user.email !== newUserEmail){
+                return res.status(403).send({message: 'forbidden access'});
+            }
             const cardItems = cartItemCollection.find();
             const result = await cardItems.toArray();
             res.send(result);
@@ -223,11 +228,11 @@ async function run() {
 
 
         // Find Cart item to delete from cart page
-        app.delete('/carditems/:userId', async (req, res) => {
-            const newUserId = req.params.userId;
+        app.delete('/carditems/:userEmail', async (req, res) => {
+            const newUserEmail = req.params.userEmail;
             const productId = req.query.productid;
 
-            const cartItemCollection = client.db("aircraftengineersstoreAddToCartDB").collection(`${newUserId}`);
+            const cartItemCollection = client.db("aircraftengineersstoreAddToCartDB").collection(`${newUserEmail}`);
 
             const query = { _id: new ObjectId(productId) };
             const result = await cartItemCollection.deleteOne(query);
