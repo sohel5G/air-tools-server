@@ -11,7 +11,8 @@ const cors = require('cors')
 
 //middleware
 app.use(cors({
-    origin: ['http://localhost:5173'],
+    // origin: ['http://localhost:5173'],
+    origin: ['https://air-tools-coderloft.web.app', 'https://air-tools-coderloft.firebaseapp.com'],
     credentials: true
 }));
 app.use(express.json());
@@ -24,8 +25,6 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
     console.log(`Aircraft Engineers Store Server is running on PORT: ${port}`)
 })
-
-
 
 
 
@@ -56,9 +55,6 @@ const verifyToken = (req, res, next) => {
 
 
 
-
-
-
 const uri = `mongodb+srv://${process.env.USER_NAME}:${process.env.PASS_WORD}@cluster0.qbl5b3c.mongodb.net/?retryWrites=true&w=majority`;
 
 const client = new MongoClient(uri, {
@@ -75,13 +71,6 @@ const brandsCollection = client.db("aircraftengineersstoreDB").collection("brand
 async function run() {
     try {
         // await client.connect();
-
-
-
-
-
-
-
 
 
         // Auth API, Create token and set it to browser cookie
@@ -107,21 +96,6 @@ async function run() {
             res.clearCookie('token', { maxAge: 0 }).send({ success: true })
         })
         // Remove cookie if user logout end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
