@@ -167,3 +167,39 @@ app.get('/carditems/:userEmail', verifyToken, async (req, res) => {
 // make API secure and verify the token end
 ```
 
+
+
+
+
+
+# Axios secure custom hook
+```JavaScript
+// Custom hooks
+const axiosSecure = axios.create({
+    baseURL: 'http://localhost:5000',
+    withCredentials: true
+})
+const useAxiosSecure = () => {
+    useEffect(() => {
+        axiosSecure.interceptors.response.use(res => {
+            return res;
+        }, err => {
+            console.log('Err trucking in the Interceptor', err.response);
+            if (err.response.status === 401 || err.response.status === 403) {
+                console.log('Logout the user')
+            }
+        })
+    }, [])
+    return axiosSecure;
+};
+export default useAxiosSecure;
+// Custom hooks end
+
+// fetching data 
+axiosSecure.get(`/carditems/${userEmail}`)
+    .then(res => {
+        setCartItems(res.data)
+    })
+// fetching data end
+
+```
